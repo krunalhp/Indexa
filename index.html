@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Indexa</title>
+  <meta name="description"
+    content="Indexa - A beautiful bookmark manager with Chrome import, tags, and liquid glass UI">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <!-- SVG Filter for Liquid Glass Effect -->
+  <svg style="position: absolute; width: 0; height: 0;">
+    <defs>
+      <filter id="glass-distortion" x="-50%" y="-50%" width="200%" height="200%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.01 0.01" numOctaves="3" seed="5" result="noise" />
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="8" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+      <filter id="glass-distortion-subtle" x="-50%" y="-50%" width="200%" height="200%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.02 0.02" numOctaves="2" seed="3" result="noise" />
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="4" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </defs>
+  </svg>
+
+  <!-- Background -->
+  <div class="animated-background"></div>
+
+  <!-- Main App Container -->
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header liquidGlass-wrapper">
+      <div class="liquidGlass-effect"></div>
+      <div class="liquidGlass-tint"></div>
+      <div class="liquidGlass-shine"></div>
+      <div class="header-content">
+        <div class="logo">
+          <span class="logo-icon">🔖</span>
+          <h1>Indexa</h1>
+          <a href="https://github.com/krunalhp/indexa#readme" target="_blank" class="readme-link"
+            title="View README">📄</a>
+        </div>
+        <div class="header-actions">
+          <button class="action-btn" id="importChromeBtn" title="Import Chrome Bookmarks">
+            <span class="btn-icon">📥</span>
+            <span class="btn-text">Import Chrome</span>
+          </button>
+          <button class="action-btn" id="autoCategorizeBtn" title="Auto-categorize uncategorized bookmarks">
+            <span class="btn-icon">🤖</span>
+            <span class="btn-text">Auto-Tag</span>
+          </button>
+          <button class="action-btn" id="exportDataBtn" title="Export Data">
+            <span class="btn-icon">💾</span>
+            <span class="btn-text">Export</span>
+          </button>
+          <button class="action-btn" id="importDataBtn" title="Import Data">
+            <span class="btn-icon">📤</span>
+            <span class="btn-text">Import</span>
+          </button>
+          <button class="action-btn primary" id="addBookmarkBtn" title="Add Bookmark">
+            <span class="btn-icon">➕</span>
+            <span class="btn-text">Add</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Search Bar -->
+    <div class="search-container liquidGlass-wrapper">
+      <div class="liquidGlass-effect"></div>
+      <div class="liquidGlass-tint"></div>
+      <div class="liquidGlass-shine"></div>
+      <div class="search-content">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Search bookmarks by title or URL..." autocomplete="off">
+        <button class="clear-search" id="clearSearch" title="Clear search">✕</button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Sidebar -->
+      <aside class="sidebar liquidGlass-wrapper">
+        <div class="liquidGlass-effect"></div>
+        <div class="liquidGlass-tint"></div>
+        <div class="liquidGlass-shine"></div>
+        <div class="sidebar-content">
+          <div class="sidebar-section">
+            <h3>Categories</h3>
+            <ul class="tag-list" id="tagList">
+              <li class="tag-item active" data-tag="all">
+                <span class="tag-icon">📁</span>
+                <span class="tag-name">All Bookmarks</span>
+                <span class="tag-count" id="allCount">0</span>
+              </li>
+              <li class="tag-item" data-tag="uncategorized">
+                <span class="tag-icon">📌</span>
+                <span class="tag-name">Uncategorized</span>
+                <span class="tag-count" id="uncategorizedCount">0</span>
+              </li>
+            </ul>
+          </div>
+          <div class="sidebar-section collapsible" id="tagsSection">
+            <h3 class="section-toggle" id="tagsToggle">
+              <span class="toggle-arrow">▼</span>
+              Tags
+              <span class="tag-count-badge" id="totalTagsCount">0</span>
+            </h3>
+            <div class="collapsible-content" id="tagsContent">
+              <ul class="tag-list" id="customTagList">
+                <!-- Dynamic tags will be inserted here -->
+              </ul>
+              <button class="add-tag-btn" id="addTagBtn">
+                <span>➕</span> Add Tag
+              </button>
+            </div>
+          </div>
+          <div class="sidebar-section bulk-section">
+            <h3>Bulk Actions</h3>
+            <label class="bulk-mode-toggle">
+              <input type="checkbox" id="bulkModeToggle">
+              <span class="toggle-slider"></span>
+              <span class="toggle-label">Selection Mode</span>
+            </label>
+            <div class="bulk-actions" id="bulkActions" style="display: none;">
+              <span class="selected-count"><span id="selectedCount">0</span> selected</span>
+              <button class="bulk-btn" id="bulkTagBtn">🏷️ Assign Tags</button>
+              <button class="bulk-btn danger" id="bulkDeleteBtn">🗑️ Delete</button>
+              <button class="bulk-btn" id="selectAllBtn">☑️ Select All</button>
+              <button class="bulk-btn" id="deselectAllBtn">☐ Deselect All</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Bookmarks Grid -->
+      <main class="bookmarks-area">
+        <div class="bookmarks-header">
+          <h2 id="currentCategory">All Bookmarks</h2>
+          <div class="sort-options">
+            <label>Sort by:</label>
+            <select id="sortSelect">
+              <option value="dateDesc">Newest First</option>
+              <option value="dateAsc">Oldest First</option>
+              <option value="nameAsc">Name A-Z</option>
+              <option value="nameDesc">Name Z-A</option>
+            </select>
+          </div>
+        </div>
+        <div class="bookmarks-grid" id="bookmarksGrid">
+          <!-- Bookmark tiles will be inserted here -->
+        </div>
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">📚</div>
+          <h3>No bookmarks yet</h3>
+          <p>Import your Chrome bookmarks or add new ones to get started!</p>
+          <button class="action-btn primary" id="emptyImportBtn">
+            <span class="btn-icon">📥</span>
+            <span>Import Chrome Bookmarks</span>
+          </button>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Add/Edit Bookmark Modal -->
+  <div class="modal-overlay" id="bookmarkModal">
+    <div class="modal liquidGlass-wrapper">
+      <div class="liquidGlass-effect"></div>
+      <div class="liquidGlass-tint"></div>
+      <div class="liquidGlass-shine"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modalTitle">Add Bookmark</h2>
+          <button class="modal-close" id="closeBookmarkModal">✕</button>
+        </div>
+        <form id="bookmarkForm">
+          <input type="hidden" id="bookmarkId">
+          <div class="form-group">
+            <label for="bookmarkTitle">Title</label>
+            <input type="text" id="bookmarkTitle" placeholder="Bookmark title" required>
+          </div>
+          <div class="form-group">
+            <label for="bookmarkUrl">URL</label>
+            <input type="url" id="bookmarkUrl" placeholder="https://example.com" required>
+          </div>
+          <div class="form-group">
+            <label>Tags</label>
+            <div class="tag-selector" id="tagSelector">
+              <!-- Tag checkboxes will be inserted here -->
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="bookmarkNotes">Notes (optional)</label>
+            <textarea id="bookmarkNotes" placeholder="Add notes about this bookmark..."></textarea>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" id="cancelBookmark">Cancel</button>
+            <button type="submit" class="btn-primary">Save Bookmark</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Tag Modal -->
+  <div class="modal-overlay" id="tagModal">
+    <div class="modal modal-small liquidGlass-wrapper">
+      <div class="liquidGlass-effect"></div>
+      <div class="liquidGlass-tint"></div>
+      <div class="liquidGlass-shine"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="tagModalTitle">Add Tag</h2>
+          <button class="modal-close" id="closeTagModal">✕</button>
+        </div>
+        <form id="tagForm">
+          <input type="hidden" id="tagId">
+          <div class="form-group">
+            <label for="tagName">Tag Name</label>
+            <input type="text" id="tagName" placeholder="Enter tag name" required>
+          </div>
+          <div class="form-group">
+            <label for="tagColor">Tag Color</label>
+            <div class="color-picker" id="colorPicker">
+              <button type="button" class="color-option" data-color="#ef4444" style="background: #ef4444;"></button>
+              <button type="button" class="color-option" data-color="#f97316" style="background: #f97316;"></button>
+              <button type="button" class="color-option" data-color="#eab308" style="background: #eab308;"></button>
+              <button type="button" class="color-option" data-color="#22c55e" style="background: #22c55e;"></button>
+              <button type="button" class="color-option" data-color="#14b8a6" style="background: #14b8a6;"></button>
+              <button type="button" class="color-option" data-color="#3b82f6" style="background: #3b82f6;"></button>
+              <button type="button" class="color-option" data-color="#8b5cf6" style="background: #8b5cf6;"></button>
+              <button type="button" class="color-option" data-color="#ec4899" style="background: #ec4899;"></button>
+              <button type="button" class="color-option selected" data-color="#6b7280"
+                style="background: #6b7280;"></button>
+            </div>
+            <input type="hidden" id="tagColor" value="#6b7280">
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" id="cancelTag">Cancel</button>
+            <button type="button" class="btn-danger" id="deleteTag" style="display: none;">Delete</button>
+            <button type="submit" class="btn-primary">Save Tag</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Tag Assignment Modal -->
+  <div class="modal-overlay" id="bulkTagModal">
+    <div class="modal modal-small liquidGlass-wrapper">
+      <div class="liquidGlass-effect"></div>
+      <div class="liquidGlass-tint"></div>
+      <div class="liquidGlass-shine"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Assign Tags to Selected</h2>
+          <button class="modal-close" id="closeBulkTagModal">✕</button>
+        </div>
+        <div class="bulk-tag-info">
+          <span id="bulkSelectedInfo">0 bookmarks selected</span>
+        </div>
+        <div class="form-group">
+          <label>Select tags to assign:</label>
+          <div class="tag-selector" id="bulkTagSelector">
+            <!-- Tag checkboxes will be inserted here -->
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" id="cancelBulkTag">Cancel</button>
+          <button type="button" class="btn-primary" id="applyBulkTags">Apply Tags</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- File Input (hidden) -->
+  <input type="file" id="chromeImportInput" accept=".html" style="display: none;">
+  <input type="file" id="dataImportInput" accept=".json" style="display: none;">
+
+  <!-- Toast Notification -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
